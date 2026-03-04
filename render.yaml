@@ -1,0 +1,14 @@
+services:
+  # Node Express Server (Used by the React Frontend)
+  - type: web
+    name: learnboard-server
+    env: node
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: PORT
+        value: 5000
+      - key: OPENROUTER_API_KEY
+        sync: false # Set this in Render Dashboard
+    buildCommand: "npm install"
+    startCommand: "npm start"

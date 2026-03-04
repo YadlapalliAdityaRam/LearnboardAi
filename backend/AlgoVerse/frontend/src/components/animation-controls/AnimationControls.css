@@ -1,0 +1,107 @@
+.animation-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--bg-card-dark);
+    /* Dark card background */
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.controls-group {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.control-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.control-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.play-btn {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--accent-red) 100%);
+    color: white;
+    border: none;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+}
+
+.play-btn:hover:not(:disabled) {
+    background: var(--brand-secondary);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+}
+
+.scrubber-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.scrubber-input {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    appearance: none;
+    background: #E2E8F0;
+    outline: none;
+}
+
+.scrubber-input::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.scrubber-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.step-counter {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    min-width: 60px;
+    text-align: right;
+}
+
+.speed-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding-top: 8px;
+    border-top: 1px solid #F1F5F9;
+}

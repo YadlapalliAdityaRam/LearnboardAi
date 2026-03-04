@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>LearnBoard AI - Interactive Learning Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LearnBoard AI - Generate interactive lessons on any topic using AI. Upload PDFs, take quizzes, study with flashcards, and learn with an AI tutor." />
+    <meta name="keywords" content="AI Learning, Interactive Lessons, Quiz Generator, Flashcards, AI Tutor, PDF Analysis" />
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Header -->
+<div class="header">
+    <div class="logo">
+        <i class="fas fa-graduation-cap"></i>
+        <span>LearnBoard AI</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-icon" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+            <i class="fas fa-moon" id="darkModeIcon"></i>
+        </button>
+        <button class="btn btn-secondary" onclick="showMenu()" style="font-size: 0.95rem; padding: 0.7rem 1.5rem;">
+            <i class="fas fa-home"></i> Home
+        </button>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section progress-section">
+            <h3><i class="fas fa-chart-line"></i> Progress</h3>
+            <div class="progress-track">
+                <div id="progressBar" class="progress-fill"></div>
+            </div>
+            <p id="progressText" class="progress-label">Slide 0 of 0</p>
+        </div>
+
+        <div class="sidebar-section actions-section">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <button class="btn btn-primary sidebar-btn" onclick="downloadPDF()">
+                <i class="fas fa-download"></i> Save Notes
+            </button>
+            <button class="btn btn-accent sidebar-btn" id="quizBtn" onclick="generateQuiz()" style="display:none;">
+                <i class="fas fa-question-circle"></i> Take Quiz
+            </button>
+            <button class="btn btn-secondary sidebar-btn" id="flashcardBtn" onclick="generateFlashcards()" style="display:none;">
+                <i class="fas fa-clone"></i> Flashcards
+            </button>
+        </div>
+
+        <div class="sidebar-section history-section">
+            <h3><i class="fas fa-history"></i> Recent Lessons</h3>
+            <ul id="lessonHistory" class="history-list">
+                <li class="history-empty">No recent lessons</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div class="main-content" id="menu">
+        <div class="page-heading">
+            <div class="heading-badge">AI-Powered Learning</div>
+            <h1>What would you like to learn today?</h1>
+            <p>Choose your learning adventure and let AI be your guide</p>
+        </div>
+
+        <div class="card-grid">
+            <!-- Create Lesson Card -->
+            <div class="card card-lesson">
+                <div class="card-glow"></div>
+                <div class="card-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+                <h3>Create New Lesson</h3>
+                <p class="card-desc">Generate an interactive lesson on any topic using AI.</p>
+                <div class="input-group" style="position: relative;">
+                    <input type="text" id="topic" class="styled-input" placeholder="e.g., Quantum Physics, Renaissance Art"
+                           oninput="showSuggestions(this.value)"
+                           onfocus="showSuggestions(this.value)"
+                           onkeydown="if(event.key==='Enter') createDoc()"
+                           autocomplete="off">
+                    <div id="suggestions" class="suggestions-dropdown"></div>
+                </div>
+                <div class="input-group">
+                    <label>Length: <span id="slideCountDisplay" class="count-badge">5</span> slides</label>
+                    <input type="range" id="pages" min="3" max="10" value="5" class="range-input" oninput="document.getElementById('slideCountDisplay').innerText = this.value">
+                </div>
+                <button class="btn btn-primary btn-full" onclick="createDoc()">
+                    <i class="fas fa-sparkles"></i> Generate Lesson
+                </button>
+            </div>
+
+            <!-- Analyze PDF Card -->
+            <div class="card card-pdf">
+                <div class="card-glow"></div>
+                <div class="card-icon"><i class="fas fa-file-pdf"></i></div>
+                <h3>Analyze PDF</h3>
+                <p class="card-desc">Upload a document and LearnBoard will teach it to you interactively.</p>
+                <div class="input-group">
+                    <label class="file-upload-label" id="fileUploadLabel">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span id="fileUploadText">Click to upload PDF</span>
+                        <input type="file" id="pdfFile" accept=".pdf" class="file-input" onchange="handleFileSelect(this)">
+                    </label>
+                </div>
+                <button class="btn btn-accent btn-full" onclick="uploadPDF()">
+                    <i class="fas fa-brain"></i> Analyze & Learn
+                </button>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-strip">
+            <div class="feature-item">
+                <i class="fas fa-robot"></i>
+                <span>AI Tutor</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-question-circle"></i>
+                <span>Quizzes</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-clone"></i>
+                <span>Flashcards</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-download"></i>
+                <span>Save Notes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classroom View -->
+    <div class="classroom-view main-content" id="classroom">
+        <div class="classroom-container" id="classroomContainer">
+
+            <!-- PDF Side -->
+            <div class="pdf-side" id="pdfSide" style="display:none;">
+                <button class="back-btn" onclick="exitFullscreen('pdf')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <div class="pdf-controls">
+                    <span style="font-weight:600; font-size:1.1rem;">📄 Source Material</span>
+                    <div class="nav-buttons">
+                        <button onclick="prevPdfPage()" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pdfPageNum" style="margin:0 0.7rem; font-weight:600;">1</span>
+                        <button onclick="nextPdfPage()" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <button class="fullscreen-btn" onclick="toggleFullscreen('pdf')">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
+                <div class="pdf-viewer" id="pdfViewer">
+                    <canvas id="pdfCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Board Side -->
+            <div class="board-side" id="boardSide">
+                <button class="back-btn" onclick="exitBothFullscreen()">
+                    <i class="fas fa-arrow-left"></i> Exit
+                </button>
+
+                <div class="slide-header">
+                    <h1 class="slide-title" id="slideTitle">Slide Title</h1>
+                    <div style="display:flex; gap:1rem; align-items:center;">
+                        <span class="slide-counter" id="slideCounter">1 / 5</span>
+                        <button class="btn btn-icon" onclick="toggleFullscreen('board')" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="slide-content" id="slideContent">
+                    Content goes here...
+                </div>
+
+                <div class="deep-dive-card">
+                    <h3><i class="fas fa-lightbulb"></i> Key Insights</h3>
+                    <ul class="explanation-points" id="slideExplanation"></ul>
+                </div>
+
+                <!-- AI Tutor Section -->
+                <div class="ai-tutor-section">
+                    <h3><i class="fas fa-robot"></i> AI Tutor</h3>
+                    <div class="tutor-input-row">
+                        <input type="text" id="doubtQuestion" class="styled-input" placeholder="Ask me anything about this slide..."
+                               onkeydown="if(event.key==='Enter') askDoubt()">
+                        <button class="btn btn-primary" onclick="askDoubt()" style="padding:1rem 1.5rem;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div id="tutorAnswer"></div>
+                </div>
+
+                <!-- Quiz Section (hidden until triggered) -->
+                <div class="quiz-section" id="quizSection" style="display:none;">
+                    <h3><i class="fas fa-question-circle"></i> Quick Quiz</h3>
+                    <div id="quizContent"></div>
+                    <div id="quizScore" class="quiz-score" style="display:none;"></div>
+                </div>
+
+                <!-- Flashcard Section (hidden until triggered) -->
+                <div class="flashcard-section" id="flashcardSection" style="display:none;">
+                    <h3><i class="fas fa-clone"></i> Flashcards</h3>
+                    <div class="flashcard-container" id="flashcardContainer"></div>
+                    <div class="flashcard-nav" id="flashcardNav" style="display:none;">
+                        <button class="btn btn-secondary" onclick="prevFlashcard()"><i class="fas fa-chevron-left"></i> Prev</button>
+                        <span id="flashcardCounter">1 / 5</span>
+                        <button class="btn btn-primary" onclick="nextFlashcard()">Next <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Slide Navigation -->
+                <div class="slide-nav">
+                    <button class="btn btn-secondary" onclick="prevSlide()">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="btn btn-primary" onclick="nextSlide()">
+                        Next Slide <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Both Button -->
+<button class="both-fullscreen-btn" id="bothFullscreenBtn" onclick="toggleBothFullscreen()">
+    <i class="fas fa-expand"></i> Fullscreen Both
+</button>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="spinner-ring"></div>
+    </div>
+    <h2 id="loadingText">Generating Lesson...</h2>
+    <p class="loading-subtitle">This may take a few seconds</p>
+</div>
+
+<!-- Custom JavaScript -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>

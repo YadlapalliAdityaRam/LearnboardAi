@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>LearnBoard AI - Interactive Learning Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../backend/static/css/style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            <span>LearnBoard AI</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-icon" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+                <i class="fas fa-moon" id="darkModeIcon"></i>
+            </button>
+            <button class="btn btn-secondary" onclick="showMenu()" style="font-size: 0.95rem; padding: 0.7rem 1.5rem;">
+                <i class="fas fa-home"></i> Home
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3>📊 Progress</h3>
+                <div style="background:rgba(255,255,255,0.3); height:10px; border-radius:10px; overflow:hidden;">
+                    <div id="progressBar"
+                        style="width:0%; height:100%; background:white; transition: width 0.5s; box-shadow: 0 0 10px rgba(255,255,255,0.5);">
+                    </div>
+                </div>
+                <p id="progressText" style="margin-top:1rem; font-size:1rem; color:white; font-weight:600;">Slide 0 of 0
+                </p>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>⚡ Quick Actions</h3>
+                <button class="btn btn-primary" style="width:100%; margin-bottom:0.7rem;" onclick="downloadPDF()">
+                    <i class="fas fa-download"></i> Save Notes
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content" id="menu">
+            <div class="page-heading">
+                <h1>🚀 What would you like to learn today?</h1>
+                <p>Choose your learning adventure</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-magic"></i></div>
+                    <h3>Create New Lesson</h3>
+                    <p style="color:#64748b; margin-bottom:1.5rem;">Generate an interactive lesson on any topic using
+                        AI.</p>
+                    <div class="input-group" style="position: relative;">
+                        <input type="text" id="topic" class="styled-input"
+                            placeholder="e.g., Quantum Physics, Renaissance Art" oninput="showSuggestions(this.value)"
+                            onfocus="showSuggestions(this.value)" autocomplete="off">
+                        <div id="suggestions" class="suggestions-dropdown"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Length: <span id="slideCountDisplay" style="color:var(--primary);">5</span>
+                            slides</label>
+                        <input type="range" id="pages" min="3" max="10" value="5" class="styled-input"
+                            style="padding:0;"
+                            oninput="document.getElementById('slideCountDisplay').innerText = this.value">
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;" onclick="createDoc()">
+                        <i class="fas fa-wand-magic-sparkles"></i> Generate
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-file-pdf"></i></div>
+                    <h3>Analyze PDF</h3>
+                    <p style="color:#64748b; margin-bottom:1.5rem;">Upload a document and LearnBoard will teach it to
+                        you interactively.</p>
+                    <div class="input-group">
+                        <input type="file" id="pdfFile" accept=".pdf" class="styled-input">
+                    </div>
+                    <button class="btn btn-accent" style="width:100%;" onclick="uploadPDF()">
+                        <i class="fas fa-brain"></i> Analyze & Learn
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="classroom-view main-content" id="classroom">
+            <div class="classroom-container" id="classroomContainer">
+
+                <div class="pdf-side" id="pdfSide" style="display:none;">
+                    <button class="back-btn" onclick="exitFullscreen('pdf')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <div class="pdf-controls">
+                        <span style="font-weight:600; font-size:1.1rem;">📄 Source Material</span>
+                        <div class="nav-buttons">
+                            <button onclick="prevPdfPage()" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                            <span id="pdfPageNum" style="margin:0 0.7rem; font-weight:600;">1</span>
+                            <button onclick="nextPdfPage()" class="nav-btn"><i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('pdf')">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                    </div>
+                    <div class="pdf-viewer" id="pdfViewer">
+                        <canvas id="pdfCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="board-side" id="boardSide">
+                    <button class="back-btn" onclick="exitBothFullscreen()">
+                        <i class="fas fa-arrow-left"></i> Exit
+                    </button>
+
+                    <div class="slide-header">
+                        <h1 class="slide-title" id="slideTitle">Slide Title</h1>
+                        <div style="display:flex; gap:1rem; align-items:center;">
+                            <span class="slide-counter" id="slideCounter">1 / 5</span>
+                            <button class="btn btn-secondary" onclick="toggleFullscreen('board')"
+                                style="padding: 0.7rem 1.2rem; font-size: 0.9rem;">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="slide-content" id="slideContent">
+                        Content goes here...
+                    </div>
+
+                    <div class="deep-dive-card">
+                        <h3><i class="fas fa-lightbulb"></i> Key Insights</h3>
+                        <ul class="explanation-points" id="slideExplanation"></ul>
+                    </div>
+
+                    <div class="ai-tutor-section">
+                        <h3><i class="fas fa-robot"></i> AI Tutor</h3>
+                        <div style="display:flex; gap:0.7rem; margin-top:1rem;">
+                            <input type="text" id="doubtQuestion" class="styled-input"
+                                placeholder="Ask me anything about this slide...">
+                            <button class="btn btn-primary" onclick="askDoubt()" style="padding:1rem 1.5rem;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div id="tutorAnswer"></div>
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div class="quiz-section" id="quizSection" style="display:none;">
+                        <h3><i class="fas fa-question-circle"></i> Knowledge Quiz</h3>
+                        <div id="quizContent"></div>
+                        <div id="quizScore" style="display:none;"></div>
+                    </div>
+
+                    <!-- Flashcard Section -->
+                    <div class="flashcard-section" id="flashcardSection" style="display:none;">
+                        <h3><i class="fas fa-clone"></i> Study Flashcards</h3>
+                        <div id="flashcardContainer"></div>
+                        <p class="flashcard-hint">Click to flip</p>
+                        <div class="flashcard-nav" id="flashcardNav" style="display:none;">
+                            <button class="btn btn-secondary" onclick="prevFlashcard()"><i
+                                    class="fas fa-chevron-left"></i></button>
+                            <span id="flashcardCounter">1 / 8</span>
+                            <button class="btn btn-secondary" onclick="nextFlashcard()"><i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="slide-nav">
+                        <button class="btn btn-secondary" onclick="prevSlide()">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <button class="btn btn-primary" onclick="nextSlide()">
+                            Next Slide <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" id="quizBtn" onclick="generateQuiz()"
+        style="display:none; position:fixed; bottom:4rem; right:1.5rem; z-index:1100; border-radius:50px; box-shadow:0 8px 25px rgba(99,102,241,0.4);">
+        <i class="fas fa-question-circle"></i> Quiz
+    </button>
+    <button class="btn btn-accent" id="flashcardBtn" onclick="generateFlashcards()"
+        style="display:none; position:fixed; bottom:7rem; right:1.5rem; z-index:1100; border-radius:50px; box-shadow:0 8px 25px rgba(236,72,153,0.4);">
+        <i class="fas fa-clone"></i> Flashcards
+    </button>
+
+    <button class="both-fullscreen-btn" id="bothFullscreenBtn" onclick="toggleBothFullscreen()">
+        <i class="fas fa-expand"></i> Fullscreen Both
+    </button>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <h2 id="loadingText">Generating Lesson...</h2>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Custom JavaScript -->
+    <script src="../backend/static/js/app.js"></script>
+
+</body>
+
+</html>
