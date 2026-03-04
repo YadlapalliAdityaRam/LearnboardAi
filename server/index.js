@@ -9,7 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+// Enable CORS for frontend (Allow all for now, or specify Netlify URL later)
+app.use(cors({
+    origin: ["http://localhost:5173", process.env.FRONTEND_URL || "*"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -19,7 +24,17 @@ app.use("/api/quiz", require("./routes/quiz"));
 app.use("/api/flashcards", require("./routes/flashcards"));
 app.use("/api/tutor", require("./routes/tutor"));
 
-// Health check
+// Root Route - To verify the server is running on Render
+app.get("/", (req, res) => {
+    res.status(200).send("LearnboardAI Backend Running");
+});
+
+// Simple Health Check Route required by some Render configurations
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
+
+// Detailed API Health check
 app.get("/api/health", (req, res) => {
     res.json({
         status: "ok",
