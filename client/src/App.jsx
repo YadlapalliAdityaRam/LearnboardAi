@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import LandingPage from "./components/LandingPage";
 import Classroom from "./components/Classroom";
 import { generateLesson, analyzePDF, healthCheck } from "./services/api";
+import { Analytics } from "@vercel/analytics/react";
 
 function AppInner() {
     const toast = useToast();
@@ -139,6 +140,7 @@ export default function App() {
         <ThemeProvider>
             <ToastProvider>
                 <AppInner />
+                <Analytics />
             </ToastProvider>
         </ThemeProvider>
     );
