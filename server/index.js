@@ -9,6 +9,7 @@ const resolvers = require("./graphql/resolvers");
 
 async function startServer() {
     const app = express();
+    app.set('trust proxy', 1); // Trust first proxy (Render)
     const PORT = process.env.PORT || 5000;
 
     // Middleware
@@ -34,6 +35,11 @@ async function startServer() {
 
     app.get("/health", (req, res) => {
         res.status(200).send("OK");
+    });
+
+    // Render Health Check endpoint
+    app.get('/api/health', (req, res) => {
+        res.status(200).send('OK');
     });
 
     // Error handler
