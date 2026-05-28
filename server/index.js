@@ -42,7 +42,7 @@ async function startServer() {
         res.status(500).json({ error: err.message || "Internal server error" });
     });
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
         console.log("\n" + "=".repeat(55));
         console.log("🚀 LearnBoard AI Server (Express + GraphQL)");
         console.log("=".repeat(55));
@@ -51,7 +51,7 @@ async function startServer() {
         } else {
             console.log("❌ OPENROUTER_API_KEY not set in .env!");
         }
-        console.log(`\n📡 http://localhost:${PORT}/graphql`);
+        console.log(`\n📡 Server running on port ${PORT}`);
         console.log("=".repeat(55) + "\n");
     });
 }
